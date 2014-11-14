@@ -57,10 +57,16 @@ $lang = array(
 "CURL error: ",
 
 "s3_key_id" =>
-"Amazon S3 key ID",
+"AWS Access Key ID",
 
 "s3_key_value" =>
-"Amazon S3 key value",
+"Secret Access Key",
+
+"cloudfront_key_pair_id" =>
+"CloudFront Key Pair ID",
+
+"cloudfront_private_key" =>
+"CloudFront Private Key",
 
 "settings"  =>
 "Settings",
@@ -274,6 +280,9 @@ $lang = array(
 
 'sa_east_1' =>
 'South America (Sao Paulo)',
+
+'cloudfront' =>
+'CloudFront',
 
 /* END */
 ''=>''

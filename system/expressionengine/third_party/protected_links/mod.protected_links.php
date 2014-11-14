@@ -201,6 +201,7 @@ class Protected_links {
             
             case 'url':
                 $use_curl = true;
+                $size = -1;
 				if (!function_exists('curl_init'))
                 {
                     $use_curl = false;
@@ -229,6 +230,10 @@ class Protected_links {
 	                    return $this->EE->output->show_user_error('general', array($this->EE->lang->line('curl_error').$error));
 	                }
 	        		$size = curl_getinfo($curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
+                    if ($size<=0)
+                    {
+                        $size = $this->_curl_get_file_size(str_replace('&#47;','/',$url));
+                    }
 	        		curl_close($curl);
 	        		$memory = memory_get_usage(true);
 	                if ($size > ($memory*3/4))	 
@@ -253,6 +258,10 @@ class Protected_links {
                     header("Content-Disposition: attachment; filename=\"" . $filename . "\";"); 
                 }
         		header("Content-Transfer-Encoding: binary");
+                if ($size > 0)
+                {
+                    header('Content-Length: ' . $size);
+                }
                 
                 if ($use_curl == true)
                 {
@@ -289,6 +298,27 @@ class Protected_links {
             case 's3':
             case 'S3':
                 require_once(PATH_THIRD."protected_links/storage_api/amazon/S3.php");  
+                $s3 = new S3($this->settings['s3_key_id'], $this->settings['s3_key_value']);
+                if ($endpoint!='')
+                {
+                	$s3->setEndpoint($endpoint);
+                }
+                $headers = $s3->getObjectInfo("$container", $url, true);
+                if ($headers==false)
+                {
+                    //try get file size from URL then
+                    $fullurl = 'http://';
+                    if ($endpoint!='')
+                    {
+                        $fullurl .= $endpoint;
+                    }
+                    else
+                    {
+                        $fullurl .= 's3.amazonaws.com';
+                    }
+                    $fullurl .= '/'.$container.'/'.$url;
+                    $headers['size'] = $this->_curl_get_file_size($fullurl);
+                }
                 header("Pragma: public"); 
         		header("Expires: 0"); 
         		header("Cache-Control: must-revalidate, post-check=0, pre-check=0"); 
@@ -304,15 +334,63 @@ class Protected_links {
                 {
                     header("Content-Disposition: attachment; filename=\"" . $filename . "\";"); 
                 }
+                if (isset($headers['size']))
+                {
+                    header('Content-Length: '.$headers['size']);
+                }
         		header("Content-Transfer-Encoding: binary");
+            
+                $fp = fopen("php://output", "wb");
+                $s3->getObject("$container", $url, $fp);
+                fclose($fp);
+            break;
+            
+            case 'cloudfront':
+                require_once(PATH_THIRD."protected_links/storage_api/amazon/S3.php");  
                 $s3 = new S3($this->settings['s3_key_id'], $this->settings['s3_key_value']);
                 if ($endpoint!='')
                 {
                 	$s3->setEndpoint($endpoint);
                 }
-                $fp = fopen("php://output", "wb");
-                $s3->getObject("$container", $url, $fp);
-                fclose($fp);
+
+                $s3->freeSigningKey();
+                $s3->setSigningKey($this->settings['cloudfront_key_pair_id'], $this->settings['cloudfront_private_key'], false);
+                $distributions = $s3->listDistributions();
+                //loop though distributions, find the one that matches our origin
+                $origin = $container.'.s3.amazonaws.com';
+                $matching_distr = '';
+                foreach ($distributions as $distr_id=>$distribution)
+                {
+                    if ($distribution['origin']==$origin)
+                    {
+                        $matching_distr = $distribution['domain'];
+                        break;
+                    }
+                }
+                
+                if ($matching_distr=='')
+                {
+                    //no matching distribution, use common S3 processing
+                    return $this->_serve_file($link_id, 's3', $container, $endpoint, $url, $filename,  $type, $file_id, $inline);
+                }
+                
+                $fullurl = 'http://'.$matching_distr.'/'.$url; 
+                
+                $statement = array();
+                $statement[0] = array();
+                $statement[0]['Resource']    =  $fullurl;
+                $statement[0]['Condition'] = array(
+                     "DateLessThan" => array("AWS:EpochTime"=>time()+24*60*60),
+                     "IpAddress" => array("AWS:SourceIp"=>$this->EE->input->ip_address())
+                  
+                );
+                $policy = array();
+                $policy['Statement'] = $statement;
+
+                $signed_url = $s3->getSignedPolicyURL($policy);
+
+                header("Location: $signed_url"); 
+        		exit();
             break;
             
             case 'rackspace':
@@ -343,7 +421,7 @@ class Protected_links {
             break;
         }
  
-        
+        session_write_close();
         exit();
     }
         
@@ -593,7 +671,7 @@ class Protected_links {
     function _show_link($key)
     {
         $act = $this->EE->functions->fetch_action_id('Protected_links', 'process');
-        $url = $this->EE->config->item('site_url')."?ACT=".$act."&amp;key=".$key;
+        $url = $this->EE->config->slash_item('site_url').$this->EE->config->item('index_page')."?ACT=".$act."&amp;key=".$key;
         return $url;
     }
     
@@ -775,8 +853,11 @@ class Protected_links {
             //for guests, any link is fine
             if ($this->EE->TMPL->fetch_param('guest_access')=='yes' || $this->EE->TMPL->fetch_param('guest_access')=='on')
         	{
-        		$generate = false;	
-        		$valid_key = $obj->accesskey;
+        		if ($this->EE->TMPL->fetch_param('expire_in')=='' || ($obj->expires != '' && $obj->expires != 0 && $obj->expires > $this->EE->localize->now))
+                {
+                    $generate = false;	
+            		$valid_key = $obj->accesskey;
+                }
        		}
         }
         
@@ -907,6 +988,44 @@ class Protected_links {
         // Return the string
         return $string;
     }        
+    
+    
+    function _curl_get_file_size($url) {
+        // Assume failure.
+        $result = -1;
+        
+        $curl = curl_init( $url );
+        
+        // Issue a HEAD request and follow any redirects.
+        curl_setopt( $curl, CURLOPT_NOBODY, true );
+        curl_setopt( $curl, CURLOPT_HEADER, true );
+        curl_setopt( $curl, CURLOPT_RETURNTRANSFER, true );
+        curl_setopt( $curl, CURLOPT_FOLLOWLOCATION, true );
+        //curl_setopt( $curl, CURLOPT_USERAGENT, get_user_agent_string() );
+        
+        $data = curl_exec( $curl );
+        curl_close( $curl );
+        
+        if( $data ) {
+        $content_length = "unknown";
+        $status = "unknown";
+        
+        if( preg_match( "/^HTTP\/1\.[01] (\d\d\d)/", $data, $matches ) ) {
+          $status = (int)$matches[1];
+        }
+        
+        if( preg_match( "/Content-Length: (\d+)/", $data, $matches ) ) {
+          $content_length = (int)$matches[1];
+        }
+        
+        // http://en.wikipedia.org/wiki/List_of_HTTP_status_codes
+        if( $status == 200 || ($status > 300 && $status <= 308) ) {
+          $result = $content_length;
+        }
+        }
+        
+        return $result;
+    }
     
 
 }

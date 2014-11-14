@@ -28,7 +28,7 @@ require_once PATH_THIRD.'protected_links/config.php';
 class Protected_links_ft extends EE_Fieldtype {
 	
 	var $info = array(
-		'name'		=> 'Protected link',
+		'name'		=> PROTECTED_LINKS_ADDON_NAME,
 		'version'	=> PROTECTED_LINKS_ADDON_VERSION
 	);
 	

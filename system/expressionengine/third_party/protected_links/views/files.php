@@ -13,21 +13,21 @@
 	<fieldset>
 		<legend><?=lang('filename_contains')?></legend>
 
-	<?=form_open('C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=files');?>
+	<?=form_open('#', 'id="pl_search_form"');?>
 
 		<div class="group">
             <?php 
-            $data = array(
+            $fdata = array(
               'name'        => 'search',
-              'value'       => $selected['search'],
+              'value'       => '',
               'size'        => '255',
               'id'          => 'search',
               'style'       => 'width:50%'
             );
             
-            echo form_input($data);
+            echo form_input($fdata);
             
-            echo NBS.NBS.form_submit('submit', lang('search'), 'class="submit" id="search_button"');
+            //echo NBS.NBS.form_submit('submit', lang('search'), 'class="submit" id="search_button"');
             
             ?>
 		</div>
@@ -46,15 +46,12 @@
 <?php else:?>
 
 	<?php
-		$this->table->set_template($cp_table_template);
-		$this->table->set_heading($table_headings);
-
-		echo $this->table->generate($protected_files);
+    echo $table_html;
 	?>
 
 
 
-<span class="pagination"><?=$pagination?></span>
+<span class="pagination"><?=$pagination_html?></span>
 
 
 <?php endif; /* if $total_count > 0*/?>

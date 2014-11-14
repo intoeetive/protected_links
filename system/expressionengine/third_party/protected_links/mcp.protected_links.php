@@ -6,7 +6,7 @@
 -----------------------------------------------------
  http://www.intoeetive.com/
 -----------------------------------------------------
- Copyright (c) 2011-2013 Yuri Salimovskiy
+ Copyright (c) 2011-2014 Yuri Salimovskiy
 =====================================================
  This software is intended for usage with
  ExpressionEngine CMS, version 2.0 or higher
@@ -48,53 +48,13 @@ class Protected_links_mcp {
     }
     
     
-    function files()
+    function files_old()
     {
     	$this->EE->load->library('table');  
         $this->EE->load->library('javascript');
 
     	$vars = array();
-        /*
-        $vars['files'] = array();
-        $vars['files'][''] = $this->EE->lang->line('all_files');
-        $this->EE->db->select();
-        $this->EE->db->from('protected_links_files');
-        //$this->EE->db->group_by(array('storage, container, url'));  
-        //$this->EE->db->order_by('title', 'desc');
-        $query = $this->EE->db->get();
-        foreach ($query->result() as $obj)
-        {
-           $title_arr = explode("/", $obj->url);
-           $vars['files'][$obj->file_id] = $title_arr[(count($title_arr)-1)];
-        }
-        
-        $vars['members'] = array();
-        $vars['members'][''] = $this->EE->lang->line('all_members');
-        $query = $this->EE->db->query("SELECT DISTINCT exp_members.member_id, screen_name FROM exp_members, exp_protected_links_stats WHERE exp_members.member_id=exp_protected_links_stats.member_id");
-        foreach ($query->result() as $obj)
-        {
-           $vars['members'][$obj->member_id] = $obj->screen_name;
-        }
-        $vars['members'][0] = $this->EE->lang->line('guest');
-        
-        $vars['sortby'] = array(
-                        'dl_date'  =>  $this->EE->lang->line('last_dl_date'),
-                        'url'  =>  $this->EE->lang->line('file'),
-                        'member_id'  =>  $this->EE->lang->line('member')
-                    );
-        $vars['order'] = array(
-                        'desc'  =>  $this->EE->lang->line('desc'),
-                        'asc'  =>  $this->EE->lang->line('asc')
-                    );
-
-    	$vars['selected'] = array();
-        $vars['selected']['files']=$this->EE->input->get_post('files');
-        $vars['selected']['members']=$this->EE->input->get_post('members');
-        $vars['selected']['sortby']=($this->EE->input->get_post('sortby')!='' && $this->EE->input->get_post('sortby')!=0)?$this->EE->input->get_post('sortby'):'dl_date';
-        $vars['selected']['order']=($this->EE->input->get_post('order')!='' && $this->EE->input->get_post('order')!=0)?$this->EE->input->get_post('order'):'desc';
-
-        */
-        
+ 
         $vars['selected']['rownum']=($this->EE->input->get_post('rownum')!='')?$this->EE->input->get_post('rownum'):0;
         
         $this->EE->db->select();
@@ -138,7 +98,7 @@ class Protected_links_mcp {
            $url_arr = explode("/", $obj->url);
            $vars['protected_files'][$i]['title'] = $url_arr[(count($url_arr)-1)];
            $vars['protected_files'][$i]['dl_count'] = $obj->dl_count;
-           $vars['protected_files'][$i]['dl_date'] = $this->EE->localize->decode_date("%Y-%m-%d %H:%i", $obj->dl_date); 
+           $vars['protected_files'][$i]['dl_date'] = $this->_format_date("%Y-%m-%d %H:%i", $obj->dl_date); 
            
            $vars['protected_files'][$i]['view_stats'] = "<a href=\"".BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=filestats'.AMP.'file_id='.$obj->file_id."\" title=\"".$this->EE->lang->line('view_stats')."\"><img src=\"".$this->EE->config->slash_item('theme_folder_url')."third_party/protected_links/stats.png\" alt=\"".$this->EE->lang->line('view_stats')."\"></a>";
            
@@ -197,7 +157,14 @@ class Protected_links_mcp {
 		$vars['pagination'] = $this->EE->pagination->create_links();
         
         $this->EE->cp->set_breadcrumb(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links', lang('protected_links_module_name'));
-        $this->EE->cp->set_variable('cp_page_title', lang('protected_links_module_name').' - '.lang('files'));
+        if ($this->EE->config->item('app_version')>=260)
+        {
+        	$this->EE->view->cp_page_title = lang('protected_links_module_name').' - '.lang('files');
+        }
+        else
+        {
+        	$this->EE->cp->set_variable('cp_page_title', lang('protected_links_module_name').' - '.lang('files'));
+        }
         
         $this->EE->cp->set_right_nav(array(
 		            'generate' => BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=edit')
@@ -208,7 +175,297 @@ class Protected_links_mcp {
     }    
     
     
+    function files()
+    {
+
+        $this->EE->load->library('table');  
+        $this->EE->load->library('javascript');
+
+    	$this->EE->cp->set_breadcrumb(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links', lang('protected_links_module_name'));
+        
+        if ($this->EE->config->item('app_version')>=260)
+        {
+        	$this->EE->view->cp_page_title = lang('protected_links_module_name').' - '.lang('files');
+        }
+        else
+        {
+        	$this->EE->cp->set_variable('cp_page_title', lang('protected_links_module_name').' - '.lang('files'));
+        }
+        
+        $this->EE->cp->set_right_nav(array(
+		            'generate' => BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=edit')
+		        );
+                    
+
+        
+        $this->EE->table->set_columns(array(
+            //'count'  => array('header' => lang('#')),
+            'title' => array('header' => lang('file'), 'sort' => true),
+            'dl_count'  => array('header' => lang('dl_count'), 'sort' => true),
+            'dl_date'  => array('header' => lang('dl_date'), 'sort' => true),
+            'view_stats'  => array('header' => '', 'sort' => false),
+            'delete_file'  => array('header' => '', 'sort' => false)
+        ));
+        
+        
+        
+        $defaults = array(
+            'sort' => array('dl_date' => 'desc')
+        );
+                
+        $data = $this->EE->table->datasource('_files', $defaults);
+        
+              
+        $data['total_count'] = $data['pagination']['total_rows'];
+        
+        
+        
+        $outputjs = '
+			
+            $(\'.mainTable\').table(\'add_filter\', $(\'#pl_search_form\'));
+            
+            var draft_target = "";
+
+			$("<div id=\"file_delete_warning\">'.$this->EE->lang->line('file_delete_warning').'</div>").dialog({
+				autoOpen: false,
+				resizable: false,
+				title: "'.$this->EE->lang->line('confirm_deleting').'",
+				modal: true,
+				position: "center",
+				minHeight: "0px", 
+				buttons: {
+					Cancel: function() {
+					$(this).dialog("close");
+					},
+				"'.$this->EE->lang->line('delete_file').'": function() {
+					location=draft_target;
+				}
+				}});
+
+			$(".file_delete_warning").bind(\'click\', function (){
+				$("#file_delete_warning").dialog("open");
+				draft_target = $(this).attr("href");
+				$(".ui-dialog-buttonpane button:eq(2)").focus();	
+				return false;
+		});';
+
+		$this->EE->javascript->output(str_replace(array("\n", "\t"), '', $outputjs));
+        
+        return $this->EE->load->view('files', $data, TRUE);
+
+    }    
+    
+    function _files($state)
+    {
+        $rows = array();
+        
+        $offset = $state['offset'];
+        
+        $this->EE->db->select();
+        $this->EE->db->from('protected_links_files');
+        
+        if ($this->EE->input->get_post('search')!==false && strlen($this->EE->input->get_post('search'))>2)
+        {
+            $this->EE->db->where('url LIKE "%'.$this->EE->db->escape_str($this->EE->input->get_post('search')).'%"');
+        }
+
+        $query = $this->EE->db->get();
+        
+        $i = $offset+1;
+        
+        foreach ($query->result() as $obj)
+        {
+           
+           //$rows[$i]['count'] = $i;
+           
+           $url_arr = explode("/", $obj->url);
+           $rows[$i]['title'] = $url_arr[(count($url_arr)-1)];
+           $rows[$i]['dl_count'] = $obj->dl_count;
+           $rows[$i]['dl_date'] = $this->_format_date("%Y-%m-%d %H:%i", $obj->dl_date); 
+           
+           $rows[$i]['view_stats'] = "<a href=\"".BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=filestats'.AMP.'file_id='.$obj->file_id."\" title=\"".$this->EE->lang->line('view_stats')."\"><img src=\"".$this->EE->config->slash_item('theme_folder_url')."third_party/protected_links/stats.png\" alt=\"".$this->EE->lang->line('view_stats')."\"></a>";
+           
+           $rows[$i]['delete_file'] = "<a class=\"file_delete_warning\" href=\"".BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=deletefile'.AMP.'file_id='.$obj->file_id."\" title=\"".$this->EE->lang->line('delete_file')."\"><img src=\"".$this->EE->cp->cp_theme_url."images/icon-delete.png\" alt=\"".$this->EE->lang->line('delete_file')."\"></a>";    
+           
+           $i++;
+        }
+        
+        $this->sort = $state['sort'];
+        usort($rows, array($this, '_sort_rows'));
+
+    
+        return array(
+            'rows' => array_slice($rows, $offset, $this->perpage),
+            'pagination' => array(
+                'per_page'   => $this->perpage,
+                'total_rows' => count($rows),
+            ),
+        );
+    }
+    
+    
+    function _sort_rows($a, $b)
+    {
+          foreach ($this->sort as $key => $dir)
+          {
+                  if ($a[$key] === $b[$key])
+                  {
+                          return 0;
+                  }
+    
+          if ($dir == 'desc')
+          {
+                          return ($a[$key] < $b[$key]) ? 1 : -1;
+          }
+                  else
+                  {
+                          return ($a[$key] > $b[$key]) ? 1 : -1;
+          }
+      }
+    }
+    
+    
     function links()
+    {
+        $this->EE->load->helper('form');
+    	$this->EE->load->library('table');  
+        $this->EE->load->library('javascript');
+        
+        $this->EE->cp->set_breadcrumb(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links', lang('protected_links_module_name'));
+        if ($this->EE->config->item('app_version')>=260)
+        {
+        	$this->EE->view->cp_page_title = lang('protected_links_module_name').' - '.lang('links');
+        }
+        else
+        {
+        	$this->EE->cp->set_variable('cp_page_title', lang('protected_links_module_name').' - '.lang('links'));
+        }
+        
+        $this->EE->cp->set_right_nav(array(
+		            'generate' => BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=edit')
+		        );
+        
+        
+        $this->EE->table->set_columns(array(
+            'link_id'  => array('header' => lang('link_id'), 'sort' => true),
+            'title' => array('header' => lang('title'), 'sort' => true),
+            'filename'  => array('header' => lang('file_name'), 'sort' => true),
+            'link_date'  => array('header' => lang('created'), 'sort' => true),
+            'dl_count'  => array('header' => lang('dl_count'), 'sort' => true),
+            'view_link'  => array('header' => '', 'sort' => false),
+            'edit_link'  => array('header' => '', 'sort' => false),
+            'download_file'  => array('header' => '', 'sort' => false),
+            'delete_link'  => array('header' => '', 'sort' => false)
+        ));
+        
+        
+        
+        $defaults = array(
+            'sort' => array('link_id' => 'desc')
+        );
+                
+        $data = $this->EE->table->datasource('_links', $defaults);
+        
+              
+        $data['total_count'] = $data['pagination']['total_rows'];
+        
+        
+        
+        
+     
+        
+        $outputjs = '
+			
+            $(\'.mainTable\').table(\'add_filter\', $(\'#pl_search_form\'));
+            
+            	var draft_target = "";
+
+			$("<div id=\"link_delete_warning\">'.$this->EE->lang->line('link_delete_warning').'</div>").dialog({
+				autoOpen: false,
+				resizable: false,
+				title: "'.$this->EE->lang->line('confirm_deleting').'",
+				modal: true,
+				position: "center",
+				minHeight: "0px", 
+				buttons: {
+					Cancel: function() {
+					$(this).dialog("close");
+					},
+				"'.$this->EE->lang->line('delete_link').'": function() {
+					location=draft_target;
+				}
+				}});
+
+			$(".link_delete_warning").bind(\'click\', function (){
+				$("#link_delete_warning").dialog("open");
+				draft_target = $(this).attr("href");
+				$(".ui-dialog-buttonpane button:eq(2)").focus();	
+				return false;
+		});';
+
+		$this->EE->javascript->output(str_replace(array("\n", "\t"), '', $outputjs));
+
+        
+    	return $this->EE->load->view('links', $data, TRUE);
+	
+    }    
+    
+    
+    function _links($state)
+    {
+        $rows = array();
+        
+        $offset = $state['offset'];
+        
+        $this->EE->db->select('link_id, title, filename, accesskey, link_date, dl_count');
+        $this->EE->db->from('protected_links_links');
+        if ($this->EE->input->get_post('search')!==false && strlen($this->EE->input->get_post('search'))>2)
+        {
+            $this->EE->db->where('filename LIKE "%'.$this->EE->db->escape_str($this->EE->input->get_post('search')).'%" OR title LIKE "%'.$this->EE->db->escape_str($this->EE->input->get_post('search')).'%"');
+        }
+        $this->EE->db->where('cp_generated', 'y');
+        $this->EE->db->order_by('link_date', 'desc');
+
+        $query = $this->EE->db->get();
+        
+        $i = $offset+1;
+                    
+        $act = $this->EE->db->query("SELECT action_id FROM exp_actions WHERE class='Protected_links' AND method='process'");
+              
+        foreach ($query->result() as $obj)
+        {
+           $rows[$i]['link_id'] = $obj->link_id;
+           $rows[$i]['title'] = $obj->title;
+           $rows[$i]['filename'] = $obj->filename;
+           $rows[$i]['link_date'] = $this->_format_date("%Y-%m-%d %H:%i", $obj->link_date); 
+           $rows[$i]['dl_count'] = $obj->dl_count;
+           $rows[$i]['view_link'] = "<a href=\"".BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=linkstats'.AMP.'link_id='.$obj->link_id."\" title=\"".$this->EE->lang->line('view_stats')."\"><img src=\"".$this->EE->config->slash_item('theme_folder_url')."third_party/protected_links/stats.png\" alt=\"".$this->EE->lang->line('view_stats')."\"></a>";
+           $rows[$i]['edit_link'] = "<a href=\"".BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=edit'.AMP.'link_id='.$obj->link_id."\" title=\"".$this->EE->lang->line('edit')."\"><img src=\"".$this->EE->cp->cp_theme_url."images/icon-edit.png\" alt=\"".$this->EE->lang->line('edit')."\"></a>";
+           $url = $this->EE->config->item('site_url')."?ACT=".$act->row('action_id')."&key=".$obj->accesskey;
+
+           $rows[$i]['download_file'] = "<a href=\"".$url."\" title=\"".$this->EE->lang->line('download_file')."\"><img src=\"".$this->EE->cp->cp_theme_url."images/icon-download-file.png\" alt=\"".$this->EE->lang->line('download_file')."\"></a>";
+           $rows[$i]['delete_link'] = "<a class=\"link_delete_warning\" href=\"".BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=deletelink'.AMP.'link_id='.$obj->link_id."\" title=\"".$this->EE->lang->line('delete_link')."\"><img src=\"".$this->EE->cp->cp_theme_url."images/icon-delete.png\" alt=\"".$this->EE->lang->line('delete_link')."\"></a>";
+           
+           $i++;
+        }
+        
+        $this->sort = $state['sort'];
+        usort($rows, array($this, '_sort_rows'));
+
+    
+        return array(
+            'rows' => array_slice($rows, $offset, $this->perpage),
+            'pagination' => array(
+                'per_page'   => $this->perpage,
+                'total_rows' => count($rows),
+            ),
+        );
+    }
+    
+    
+    
+    
+    function links_old()
     {
         $this->EE->load->helper('form');
     	$this->EE->load->library('table');  
@@ -263,7 +520,7 @@ class Protected_links_mcp {
            $vars['protected_files'][$i]['link_id'] = $obj->link_id;
            $vars['protected_files'][$i]['title'] = $obj->title;
            $vars['protected_files'][$i]['filename'] = $obj->filename;
-           $vars['protected_files'][$i]['link_date'] = $this->EE->localize->decode_date("%Y-%m-%d %H:%i", $obj->link_date); 
+           $vars['protected_files'][$i]['link_date'] = $this->_format_date("%Y-%m-%d %H:%i", $obj->link_date); 
            $vars['protected_files'][$i]['dl_count'] = $obj->dl_count;
            $vars['protected_files'][$i]['view_link'] = "<a href=\"".BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=linkstats'.AMP.'link_id='.$obj->link_id."\" title=\"".$this->EE->lang->line('view_stats')."\"><img src=\"".$this->EE->config->slash_item('theme_folder_url')."third_party/protected_links/stats.png\" alt=\"".$this->EE->lang->line('view_stats')."\"></a>";
            $vars['protected_files'][$i]['edit_link'] = "<a href=\"".BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=edit'.AMP.'link_id='.$obj->link_id."\" title=\"".$this->EE->lang->line('edit')."\"><img src=\"".$this->EE->cp->cp_theme_url."images/icon-edit.png\" alt=\"".$this->EE->lang->line('edit')."\"></a>";
@@ -326,7 +583,14 @@ class Protected_links_mcp {
 		$vars['pagination'] = $this->EE->pagination->create_links();
         
         $this->EE->cp->set_breadcrumb(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links', lang('protected_links_module_name'));
-        $this->EE->cp->set_variable('cp_page_title', lang('protected_links_module_name').' - '.lang('links'));
+        if ($this->EE->config->item('app_version')>=260)
+        {
+        	$this->EE->view->cp_page_title = lang('protected_links_module_name').' - '.lang('links');
+        }
+        else
+        {
+        	$this->EE->cp->set_variable('cp_page_title', lang('protected_links_module_name').' - '.lang('links'));
+        }
         
         $this->EE->cp->set_right_nav(array(
 		            'generate' => BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=edit')
@@ -335,6 +599,7 @@ class Protected_links_mcp {
     	return $this->EE->load->view('links', $vars, TRUE);
 	
     }    
+    
     
     
     
@@ -368,7 +633,7 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
         if ($this->EE->input->get_post('date_from')!='' && $this->EE->input->get_post('date_from')!=0)
         {
             $vars['selected']['date_from']=$this->EE->input->get_post('date_from');
-            $date_from = $this->EE->localize->convert_human_date_to_gmt($this->EE->input->get_post('date_from'));
+            $date_from = $this->_string_to_timestamp($this->EE->input->get_post('date_from'));
         }
         else
         {
@@ -377,7 +642,7 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
         if ($this->EE->input->get_post('date_to')!='' && $this->EE->input->get_post('date_to')!=0)
         {
             $vars['selected']['date_to']=$this->EE->input->get_post('date_to');
-            $date_to = $this->EE->localize->convert_human_date_to_gmt($this->EE->input->get_post('date_to'));
+            $date_to = $this->_string_to_timestamp($this->EE->input->get_post('date_to'));
         }
         else
         {
@@ -399,11 +664,11 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
         $this->EE->db->where('file_id', $this->EE->input->get_post('file_id'));
         if ($vars['selected']['date_from']!='')
         {
-            $this->EE->db->where('dl_date >=', $this->EE->localize->convert_human_date_to_gmt($vars['selected']['date_from']));
+            $this->EE->db->where('dl_date >=', $this->_string_to_timestamp($vars['selected']['date_from']));
         }
         if ($vars['selected']['date_to']!='')
         {
-            $this->EE->db->where('dl_date <=', $this->EE->localize->convert_human_date_to_gmt($vars['selected']['date_to']));
+            $this->EE->db->where('dl_date <=', $this->_string_to_timestamp($vars['selected']['date_to']));
         }
         $this->EE->db->order_by('exp_protected_links_stats.dl_date', 'desc');
 
@@ -426,7 +691,7 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
         foreach ($query->result() as $obj)
         {
            //$vars['protected_files'][$i]['count'] = $i;
-           $vars['protected_files'][$i]['dl_date'] = $this->EE->localize->decode_date("%Y-%m-%d %H:%i", $obj->dl_date);
+           $vars['protected_files'][$i]['dl_date'] = $this->_format_date("%Y-%m-%d %H:%i", $obj->dl_date);
            $vars['protected_files'][$i]['screen_name'] = ($obj->member_id!=0)?"<a href=\"".BASE.AMP.'D=cp'.AMP.'C=myaccount'.AMP.'id='.$obj->member_id."\">".$obj->screen_name."</a>":$this->EE->lang->line('guest');
            $vars['protected_files'][$i]['ip_address'] = $obj->ip;
             
@@ -442,11 +707,11 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
         $this->EE->db->where('file_id', $this->EE->input->get_post('file_id'));
         if ($vars['selected']['date_from']!='')
         {
-            $this->EE->db->where('dl_date >=', $this->EE->localize->convert_human_date_to_gmt($vars['selected']['date_from']));
+            $this->EE->db->where('dl_date >=', $this->_string_to_timestamp($vars['selected']['date_from']));
         }
         if ($vars['selected']['date_to']!='')
         {
-            $this->EE->db->where('dl_date <=', $this->EE->localize->convert_human_date_to_gmt($vars['selected']['date_to']));
+            $this->EE->db->where('dl_date <=', $this->_string_to_timestamp($vars['selected']['date_to']));
         }
         $query = $this->EE->db->get();
         
@@ -459,7 +724,14 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
         $this->EE->cp->set_breadcrumb(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links', lang('protected_links_module_name'));
         $this->EE->cp->set_breadcrumb(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=files', lang('files'));
         $url_arr = explode("/", $url->row('url'));
-        $this->EE->cp->set_variable('cp_page_title', $url_arr[(count($url_arr)-1)]);
+        if ($this->EE->config->item('app_version')>=260)
+        {
+        	$this->EE->view->cp_page_title = $url_arr[(count($url_arr)-1)];
+        }
+        else
+        {
+        	$this->EE->cp->set_variable('cp_page_title', $url_arr[(count($url_arr)-1)]);
+        }
         
         $this->EE->cp->set_right_nav(array(
 		            'generate' => BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=edit')
@@ -500,7 +772,7 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
         if ($this->EE->input->get_post('date_from')!='' && $this->EE->input->get_post('date_from')!=0)
         {
             $vars['selected']['date_from']=$this->EE->input->get_post('date_from');
-            $date_from = $this->EE->localize->convert_human_date_to_gmt($this->EE->input->get_post('date_from'));
+            $date_from = $this->_string_to_timestamp($this->EE->input->get_post('date_from'));
         }
         else
         {
@@ -509,7 +781,7 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
         if ($this->EE->input->get_post('date_to')!='' && $this->EE->input->get_post('date_to')!=0)
         {
             $vars['selected']['date_to']=$this->EE->input->get_post('date_to');
-            $date_to = $this->EE->localize->convert_human_date_to_gmt($this->EE->input->get_post('date_to'));
+            $date_to = $this->_string_to_timestamp($this->EE->input->get_post('date_to'));
         }
         else
         {
@@ -531,11 +803,11 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
         $this->EE->db->where('link_id', $this->EE->input->get_post('link_id'));
         if ($vars['selected']['date_from']!='')
         {
-            $this->EE->db->where('dl_date >=', $this->EE->localize->convert_human_date_to_gmt($vars['selected']['date_from']));
+            $this->EE->db->where('dl_date >=', $this->_string_to_timestamp($vars['selected']['date_from']));
         }
         if ($vars['selected']['date_to']!='')
         {
-            $this->EE->db->where('dl_date <=', $this->EE->localize->convert_human_date_to_gmt($vars['selected']['date_to']));
+            $this->EE->db->where('dl_date <=', $this->_string_to_timestamp($vars['selected']['date_to']));
         }
         $this->EE->db->order_by('exp_protected_links_stats.dl_date', 'desc');
 
@@ -558,7 +830,7 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
         foreach ($query->result() as $obj)
         {
            //$vars['protected_files'][$i]['count'] = $i;
-           $vars['protected_files'][$i]['dl_date'] = $this->EE->localize->decode_date("%Y-%m-%d %H:%i", $obj->dl_date);
+           $vars['protected_files'][$i]['dl_date'] = $this->_format_date("%Y-%m-%d %H:%i", $obj->dl_date);
            $vars['protected_files'][$i]['screen_name'] = ($obj->member_id!=0)?"<a href=\"".BASE.AMP.'D=cp'.AMP.'C=myaccount'.AMP.'id='.$obj->member_id."\">".$obj->screen_name."</a>":$this->EE->lang->line('guest');
            $vars['protected_files'][$i]['ip_address'] = $obj->ip;
             
@@ -574,11 +846,11 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
         $this->EE->db->where('link_id', $this->EE->input->get_post('link_id'));
         if ($vars['selected']['date_from']!='')
         {
-            $this->EE->db->where('dl_date >=', $this->EE->localize->convert_human_date_to_gmt($vars['selected']['date_from']));
+            $this->EE->db->where('dl_date >=', $this->_string_to_timestamp($vars['selected']['date_from']));
         }
         if ($vars['selected']['date_to']!='')
         {
-            $this->EE->db->where('dl_date <=', $this->EE->localize->convert_human_date_to_gmt($vars['selected']['date_to']));
+            $this->EE->db->where('dl_date <=', $this->_string_to_timestamp($vars['selected']['date_to']));
         }
         $query = $this->EE->db->get();
         
@@ -590,7 +862,14 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
         
         $this->EE->cp->set_breadcrumb(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links', lang('protected_links_module_name'));
         $this->EE->cp->set_breadcrumb(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=links', lang('links'));
-        $this->EE->cp->set_variable('cp_page_title', $vars['selected']['title']);
+        if ($this->EE->config->item('app_version')>=260)
+        {
+        	$this->EE->view->cp_page_title = $vars['selected']['title'];
+        }
+        else
+        {
+        	$this->EE->cp->set_variable('cp_page_title', $vars['selected']['title']);
+        }
         
         $this->EE->cp->set_right_nav(array(
 		            'generate' => BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=edit')
@@ -632,7 +911,7 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
         if ($this->EE->input->get_post('date_from')!='' && $this->EE->input->get_post('date_from')!=0)
         {
             $vars['selected']['date_from']=$this->EE->input->get_post('date_from');
-            $date_from = $this->EE->localize->convert_human_date_to_gmt($this->EE->input->get_post('date_from'));
+            $date_from = $this->_string_to_timestamp($this->EE->input->get_post('date_from'));
         }
         else
         {
@@ -641,7 +920,7 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
         if ($this->EE->input->get_post('date_to')!='' && $this->EE->input->get_post('date_to')!=0)
         {
             $vars['selected']['date_to']=$this->EE->input->get_post('date_to');
-            $date_to = $this->EE->localize->convert_human_date_to_gmt($this->EE->input->get_post('date_to'));
+            $date_to = $this->_string_to_timestamp($this->EE->input->get_post('date_to'));
         }
         else
         {
@@ -672,11 +951,11 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
 
         if ($vars['selected']['date_from']!='')
         {
-            $this->EE->db->where('s.dl_date >=', $this->EE->localize->convert_human_date_to_gmt($vars['selected']['date_from']));
+            $this->EE->db->where('s.dl_date >=', $this->_string_to_timestamp($vars['selected']['date_from']));
         }
         if ($vars['selected']['date_to']!='')
         {
-            $this->EE->db->where('s.dl_date <=', $this->EE->localize->convert_human_date_to_gmt($vars['selected']['date_to']));
+            $this->EE->db->where('s.dl_date <=', $this->_string_to_timestamp($vars['selected']['date_to']));
         }
         $this->EE->db->order_by('s.dl_date', 'desc');
 
@@ -708,7 +987,7 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
            $url_arr = explode("/", $obj->url);
            $filename = $url_arr[(count($url_arr)-1)];
            $vars['protected_files'][$i]['file'] = "<span title=\"".$this->EE->lang->line($obj->storage).": ".$obj->container." ".$obj->url."\">$filename</span> <a href=\"".BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=filestats'.AMP.'file_id='.$obj->file_id."\" title=\"".$this->EE->lang->line('view_stats')."\"><img src=\"".$this->EE->config->slash_item('theme_folder_url')."third_party/protected_links/stats.png\" alt=\"".$this->EE->lang->line('view_stats')."\"></a>";
-           $vars['protected_files'][$i]['url'] = $this->EE->localize->decode_date("%Y-%m-%d %H:%i", $obj->dl_date);
+           $vars['protected_files'][$i]['url'] = $this->_format_date("%Y-%m-%d %H:%i", $obj->dl_date);
            $vars['protected_files'][$i]['dl_date'] = $obj->ip;
            
             
@@ -724,11 +1003,11 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
         $this->EE->db->where('member_id', $this->EE->input->get_post('member_id'));
         if ($vars['selected']['date_from']!='')
         {
-            $this->EE->db->where('dl_date >=', $this->EE->localize->convert_human_date_to_gmt($vars['selected']['date_from']));
+            $this->EE->db->where('dl_date >=', $this->_string_to_timestamp($vars['selected']['date_from']));
         }
         if ($vars['selected']['date_to']!='')
         {
-            $this->EE->db->where('dl_date <=', $this->EE->localize->convert_human_date_to_gmt($vars['selected']['date_to']));
+            $this->EE->db->where('dl_date <=', $this->_string_to_timestamp($vars['selected']['date_to']));
         }
         $query = $this->EE->db->get();
         
@@ -740,7 +1019,14 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
         
         $this->EE->cp->set_breadcrumb(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links', lang('protected_links_module_name'));
         $this->EE->cp->set_breadcrumb(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=members', lang('members'));
-        $this->EE->cp->set_variable('cp_page_title', $vars['selected']['screen_name']);
+        if ($this->EE->config->item('app_version')>=260)
+        {
+        	$this->EE->view->cp_page_title = $vars['selected']['screen_name'];
+        }
+        else
+        {
+        	$this->EE->cp->set_variable('cp_page_title', $vars['selected']['screen_name']);
+        }
         
         $this->EE->cp->set_right_nav(array(
 		            'generate' => BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=edit')
@@ -754,6 +1040,106 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
     
     
     function members()
+    {
+    	
+        $this->EE->cp->set_breadcrumb(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links', lang('protected_links_module_name'));
+        if ($this->EE->config->item('app_version')>=260)
+        {
+        	$this->EE->view->cp_page_title = lang('protected_links_module_name').' - '.lang('members');
+        }
+        else
+        {
+        	$this->EE->cp->set_variable('cp_page_title', lang('protected_links_module_name').' - '.lang('members'));
+        }
+        
+        $this->EE->cp->set_right_nav(array(
+		            'generate' => BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=edit')
+		        );
+        
+        $this->EE->load->library('table');  
+
+    	
+        
+        $this->EE->table->set_columns(array(
+            'screen_name'  => array('header' => lang('screen_name'), 'sort' => true),
+            'dl_count'  => array('header' => lang('dl_count'), 'sort' => true),
+            'view_stats'  => array('header' => lang('view_stats'), 'sort' => false)
+            
+        ));
+        
+        
+        
+        $defaults = array(
+            'sort' => array('dl_count' => 'desc')
+        );
+                
+        $data = $this->EE->table->datasource('_members', $defaults);
+        
+              
+        $data['total_count'] = $data['pagination']['total_rows'];
+        
+
+     
+        
+        $outputjs = '
+			
+            $(\'.mainTable\').table(\'add_filter\', $(\'#pl_search_form\'));
+            
+            ';
+        $this->EE->javascript->output(str_replace(array("\n", "\t"), '', $outputjs));
+            
+        
+    	return $this->EE->load->view('members', $data, TRUE);
+	
+    }    
+    
+    
+    
+    function _members($state)
+    {
+        $rows = array();
+        
+        $offset = $state['offset'];
+        
+        $this->EE->db->select('exp_protected_links_stats.member_id, screen_name, COUNT(dl_id) AS dl_count');
+        $this->EE->db->from('protected_links_stats');
+        $this->EE->db->join('members', 'exp_protected_links_stats.member_id=exp_members.member_id', 'left');
+        if ($this->EE->input->get_post('search')!==false && strlen($this->EE->input->get_post('search'))>2)
+        {
+            $this->EE->db->where('username LIKE "%'.$this->EE->db->escape_str($this->EE->input->get_post('search')).'%" OR screen_name LIKE "%'.$this->EE->db->escape_str($this->EE->input->get_post('search')).'%" OR email LIKE "%'.$this->EE->db->escape_str($this->EE->input->get_post('search')).'%" ');
+        }
+        $this->EE->db->order_by('screen_name', 'asc');
+        $this->EE->db->group_by('exp_protected_links_stats.member_id');
+
+        $query = $this->EE->db->get();
+        
+        $i = $offset+1;
+ 
+        foreach ($query->result() as $obj)
+        {
+           $rows[$i]['screen_name'] = ($obj->member_id!=0)?"<a href=\"".BASE.AMP.'D=cp'.AMP.'C=myaccount'.AMP.'id='.$obj->member_id."\">".$obj->screen_name."</a>":$this->EE->lang->line('guest');
+           $rows[$i]['dl_count'] = $obj->dl_count;
+           $rows[$i]['view_stats'] = "<a href=\"".BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=memberstats'.AMP.'member_id='.$obj->member_id."\" title=\"".$this->EE->lang->line('view_stats')."\"><img src=\"".$this->EE->config->slash_item('theme_folder_url')."third_party/protected_links/stats.png\" alt=\"".$this->EE->lang->line('view_stats')."\"></a>";
+           
+           $i++;
+        }
+        
+        $this->sort = $state['sort'];
+        usort($rows, array($this, '_sort_rows'));
+
+    
+        return array(
+            'rows' => array_slice($rows, $offset, $this->perpage),
+            'pagination' => array(
+                'per_page'   => $this->perpage,
+                'total_rows' => count($rows),
+            ),
+        );
+    }
+    
+    
+    
+    function members_old()
     {
     	$this->EE->load->library('table');  
 
@@ -806,7 +1192,7 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
         
         $this->EE->load->library('pagination');
         
-        $this->EE->db->select('member_id');
+        $this->EE->db->select('exp_protected_links_stats.member_id');
         $this->EE->db->from('exp_protected_links_stats');
         $this->EE->db->group_by('exp_protected_links_stats.member_id');
         
@@ -826,7 +1212,14 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
 		$vars['pagination'] = $this->EE->pagination->create_links();
         
         $this->EE->cp->set_breadcrumb(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links', lang('protected_links_module_name'));
-        $this->EE->cp->set_variable('cp_page_title', lang('protected_links_module_name').' - '.lang('members'));
+        if ($this->EE->config->item('app_version')>=260)
+        {
+        	$this->EE->view->cp_page_title = lang('protected_links_module_name').' - '.lang('members');
+        }
+        else
+        {
+        	$this->EE->cp->set_variable('cp_page_title', lang('protected_links_module_name').' - '.lang('members'));
+        }
         
         $this->EE->cp->set_right_nav(array(
 		            'generate' => BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=edit')
@@ -834,7 +1227,7 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
         
     	return $this->EE->load->view('members', $vars, TRUE);
 	
-    }    
+    }        
     
     
     
@@ -895,11 +1288,11 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
                                     'url' => $this->EE->lang->line('url'),
                                     'local' => $this->EE->lang->line('local'),
                                     's3' => $this->EE->lang->line('s3'),
+                                    'cloudfront' => $this->EE->lang->line('cloudfront'),
                                     'rackspace' => $this->EE->lang->line('rackspace')
                                 );
         
         $member_groups = array();
-        $member_groups[''] = '';
         $this->EE->db->select('group_id, group_title');
         $this->EE->db->where('group_id NOT IN (1,2,3)');
         $q = $this->EE->db->get('member_groups');
@@ -964,7 +1357,7 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
                 'guest_access'	=> form_dropdown('guest_access', $yesno, $q->row('guest_access')),
                 'deny_hotlink'	=> form_dropdown('deny_hotlink', $yesno, $q->row('deny_hotlink')),
                 'display_inline' => form_dropdown('inline', $yesno, $q->row('inline')),
-                'group_access'	=> form_multiselect('group_access[]', $member_groups, $group_access),
+                'group_access'	=> '',
                 'expires'	=> form_input('expires', $q->row('expires')),
                 'member_limit'	=> form_input('member_limit', $q->row('member_limit')),
                 'use_backend'	=> form_dropdown('use_backend', $yesno, $q->row('use_backend')),
@@ -972,14 +1365,25 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
                 'custom_field_value_to_access'	=> form_input('custom_profile_value', $custom_profile_value)
         		);
         		
-      		if (!in_array($q->row('storage'), array('s3', 'rackspace')))
+            foreach ($member_groups as $group_id=>$group_name)
+            {
+                $vars['data']['group_access'] .= form_checkbox('group_access[]', $group_id, (in_array($group_id, $group_access)?true:false), 'id="group_access_"'.$group_id).NBS.form_label($group_name, 'group_access_'.$group_id).BR;
+            }   
+          
+      		if (!in_array($q->row('storage'), array('s3', 'cloudfront', 'rackspace')))
 	        {
 	        	$this->EE->javascript->output('$("input[name=container]").parent().parent().hide();');
-				if ($q->row('storage')!='s3')
+				if ($q->row('storage')!='s3' && $q->row('storage')!='cloudfront')
 				{
 					$this->EE->javascript->output('$("select[name=endpoint]").parent().parent().hide();');
 				}
 	        }
+            if ($q->row('storage')=='cloudfront')
+			{
+				$this->EE->javascript->output('$("select[name=type]").parent().parent().hide();');
+                $this->EE->javascript->output('$("select[name=inline]").parent().parent().hide();');
+                $this->EE->javascript->output('$("input[name=filename]").parent().parent().hide();');
+			}
         }
         else
         {
@@ -998,23 +1402,39 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
                 'guest_access'	=> form_dropdown('guest_access', $yesno, 'y'),
                 'deny_hotlink'	=> form_dropdown('deny_hotlink', $yesno, 'n'),
                 'display_inline' => form_dropdown('inline', $yesno, 'n'),
-                'group_access'	=> form_multiselect('group_access[]', $member_groups, $group_access),
+                'group_access'	=> '',
                 'expires'	=> form_input('expires', ''),
                 'member_limit'	=> form_input('member_limit', ''),
                 'use_backend'	=> form_dropdown('use_backend', $yesno, 'y'),
                 'limit_access_by_custom_field'	=> form_dropdown('custom_profile_field', $custom_fields, ''),
                 'custom_field_value_to_access'	=> form_input('custom_profile_value', '')
         		);
-        		
+        	
+            foreach ($member_groups as $group_id=>$group_name)
+            {
+                $vars['data']['group_access'] .= form_checkbox('group_access[]', $group_id, false, 'id="group_access_"'.$group_id).NBS.form_label($group_name, 'group_access_'.$group_id).BR;
+            }   
+            	
       		$this->EE->javascript->output('$("input[name=container]").parent().parent().hide();');
       		$this->EE->javascript->output('$("select[name=endpoint]").parent().parent().hide();');
         }
         
         $this->EE->javascript->output("
 			$('select[name=storage]').change(function() {
-				if ($(this).val()=='s3') {
+				if ($(this).val()=='s3' || $(this).val()=='cloudfront') {
 					$('input[name=container]').parent().parent().show();
 					$('select[name=endpoint]').parent().parent().show();
+                    if ($(this).val()=='s3') {
+                        $('select[name=type]').parent().parent().show();
+                        $('select[name=inline]').parent().parent().show();
+                        $('input[name=filename]').parent().parent().show();
+                    }
+                    else
+                    {
+                        $('select[name=type]').parent().parent().hide();
+                        $('select[name=inline]').parent().parent().hide();
+                        $('input[name=filename]').parent().parent().hide();
+                    }
 				} else {
 					if ($(this).val()=='rackspace') {
 						$('input[name=container]').parent().parent().show();
@@ -1022,6 +1442,7 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
 						$('input[name=container]').parent().parent().hide();
 					}
 					$('select[name=endpoint]').parent().parent().hide();
+                    $('input[name=type]').parent().parent().hide();
 				}
 			});
 		");
@@ -1031,13 +1452,28 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
 
 
         $this->EE->cp->set_breadcrumb(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links', lang('protected_links_module_name'));
+        
         if ($link_id!=0)
         {
-            $this->EE->cp->set_variable('cp_page_title', lang('edit_link'));
+            if ($this->EE->config->item('app_version')>=260)
+            {
+            	$this->EE->view->cp_page_title = lang('edit_link');
+            }
+            else
+            {
+            	$this->EE->cp->set_variable('cp_page_title', lang('edit_link'));
+            }
         }
         else
         {
-            $this->EE->cp->set_variable('cp_page_title', lang('create_link'));
+            if ($this->EE->config->item('app_version')>=260)
+            {
+            	$this->EE->view->cp_page_title = lang('create_link');
+            }
+            else
+            {
+            	$this->EE->cp->set_variable('cp_page_title', lang('create_link'));
+            }
         }
         
         
@@ -1059,11 +1495,20 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
         $vars['settings'] = array(	
             's3_key_id'	=> form_input('s3_key_id', $this->settings['s3_key_id']),
             's3_key_value'	=> form_input('s3_key_value', $this->settings['s3_key_value']),
+            'cloudfront_key_pair_id'	=> form_input('cloudfront_key_pair_id', $this->settings['cloudfront_key_pair_id']),
+            'cloudfront_private_key'	=> form_textarea('cloudfront_private_key', $this->settings['cloudfront_private_key']),
             'rackspace_api_login'	=> form_input('rackspace_api_login', $this->settings['rackspace_api_login']),
             'rackspace_api_password'	=> form_input('rackspace_api_password', $this->settings['rackspace_api_password'])
     		);
     	
-        $this->EE->cp->set_variable('cp_page_title', lang('protected_links_module_name').' - '.lang('settings'));
+        if ($this->EE->config->item('app_version')>=260)
+        {
+        	$this->EE->view->cp_page_title = lang('protected_links_module_name').' - '.lang('settings');
+        }
+        else
+        {
+        	$this->EE->cp->set_variable('cp_page_title', lang('protected_links_module_name').' - '.lang('settings'));
+        }
         
         $this->EE->cp->set_right_nav(array(
 		            'generate' => BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=edit')
@@ -1075,15 +1520,20 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
     
     function save_settings()
     {
-        
-        $settings['s3_key_id'] = (isset($_POST['s3_key_id']))?$this->EE->security->xss_clean($_POST['s3_key_id']):'';
-        $settings['s3_key_value'] = (isset($_POST['s3_key_value']))?$this->EE->security->xss_clean($_POST['s3_key_value']):'';
-        $settings['rackspace_api_login'] = (isset($_POST['rackspace_api_login']))?$this->EE->security->xss_clean($_POST['rackspace_api_login']):'';
-        $settings['rackspace_api_password'] = (isset($_POST['rackspace_api_password']))?$this->EE->security->xss_clean($_POST['rackspace_api_password']):'';
+        if (empty($_POST))
+    	{
+    		show_error($this->EE->lang->line('unauthorized_access'));
+    	}
 
+        unset($_POST['submit']);
+        
         $this->EE->db->where('module_name', 'Protected_links');
-        $this->EE->db->update('modules', array('settings' => serialize($settings)));
-        $this->EE->session->set_flashdata('message_success', $this->EE->lang->line('updated'));
+        $this->EE->db->update('modules', array('settings' => serialize($_POST)));
+        
+        $this->EE->session->set_flashdata(
+    		'message_success',
+    	 	$this->EE->lang->line('preferences_updated')
+    	);        
         
         $this->EE->functions->redirect(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=settings');
     }
@@ -1187,7 +1637,7 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
         
         if (!empty($_POST['expires']))
         {
-            $data['expires'] = $this->EE->localize->convert_human_date_to_gmt($this->EE->input->get_post('expires'));
+            $data['expires'] = $this->_string_to_timestamp($this->EE->input->get_post('expires'));
         }
         else
         {
@@ -1314,7 +1764,7 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
             $this->EE->session->set_flashdata('message_failure', $this->EE->lang->line('no_file_to_delete'));  
         }
 
-        $this->EE->functions->redirect(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=index');
+        $this->EE->functions->redirect(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=files2');
         
         
     }
@@ -1376,6 +1826,45 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
 		{
 			return;
 		}
+        
+        // Assets is installed? Special way!
+        if (array_key_exists('assets', $this->EE->addons->get_installed()))
+        {
+            require_once PATH_THIRD.'assets/helper.php';
+        
+            $assets_helper = new Assets_helper;
+            $assets_helper->include_sheet_resources();
+        
+            $r = "<a href=\"#\" class=\"choose_file\"\ title=\"".$this->EE->lang->line('select_upload_file')."\"><img src=\"".$this->EE->cp->cp_theme_url."images/icon-create-upload-file.png\" alt=\"".$this->EE->lang->line('select_upload_file')."\"></a>";
+            
+            $r .= "<script type=\"text/javascript\">
+            
+            $(document).ready(function(){
+                var mySheet = new Assets.Sheet({
+    
+                    // optional settings (these are the default values):
+                    multiSelect: false,
+                    filedirs:    'all',
+                    kinds:       'any',
+                
+                    // onSelect callback (required):
+                    onSelect:    function(files) {
+                        //$('#protected_links_generate_form select[name=storage]').val('url');
+                        //$('#protected_links_generate_form select[name=storage] option:contains(\"url\")').prop('selected', true);
+                        $('#protected_links_generate_form input[name=url]').val(files[0].url);
+                    }
+                });
+                
+                $('.choose_file').click(function(){
+                    mySheet.show();
+                });
+            });
+            
+            
+            </script>";
+            
+            return $r;
+        }
 		
 		$this->EE->lang->loadfile('fieldtypes');  
 	        
@@ -1487,6 +1976,31 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
 		
 		
 	}
+    
+    
+    function _string_to_timestamp($human_string, $localized = TRUE)
+    {
+        if ($this->EE->config->item('app_version')<260)
+        {
+            return $this->EE->localize->convert_human_date_to_gmt($human_string, $localized);
+        }
+        else
+        {
+            return $this->EE->localize->string_to_timestamp($human_string, $localized);
+        }
+    }
+    
+    function _format_date($one=false, $two=false, $three=true)
+    {
+    	if ($this->EE->config->item('app_version')>=260)
+    	{
+			return $this->EE->localize->format_date($one, $two, $three);
+		}
+		else
+		{
+			return $this->EE->localize->decode_date($one, $two, $three);
+		}
+    }
        
 
 }

@@ -41,6 +41,7 @@
     <li>Display pre-generated links or generate them 'on the fly'</li>
     <li>P&amp;T Matrix support</li>
     <li>Serve files from local folder / URL / Amazon S3 or RackSpace CloudFiles secure containers</li>
+    <li>Serve files using secure URLs from your own server or Amazon CloudFront</li>
     <li>Limit file access to certain members/member groups/IP</li>
     <li>Limit file access based on custom member profile field value</li>
     <li>Limit number of time file can be downloaded by same user</li>
@@ -56,6 +57,7 @@
         
         <li><a href="#installation">Installation</a></li>
         <li><a href="#cp-create-link">Create link from Control Panel</a></li>
+        <li><a href="#cloudfront">CloudFront integration</a></li>
         <li><a href="#fieldtype">Display link using fieldtype</a></li>
         <li><a href="#displaybyid">Display link by link ID</a></li>
         <li><a href="#myfiles">Display all files user can access</a></li>
@@ -77,10 +79,10 @@
 <p>While you are able to generate links 'on the fly' in your templates, you can also generate them from module Control Panel. That way, you'll be able to add some custom access restrictions and then use links as fieldtype values or pass it to users manually.</p>
 <p>To generate the link, go to Module section of your CP, select Protected Links and then Generate Link tab. There, fill in following fields:</p>
 <ul>
-<li><strong>File storage type</strong> &mdash; local folder, URL, S3 bucket or RackSpace container</li>
+<li><strong>File storage type</strong> &mdash; local folder, URL, S3 bucket, S3 via CloudFront, or RackSpace container</li>
 <li><strong>Container/bucket</strong> &mdash; fill only if file is stored in S3 or Rackspace cloud</li>
 <li><strong>Endpoint</strong> &mdash; this is setting specific to S3. If your files are located in EU datacenter, select "Europe"</li>
-<li><strong>URL or path</strong> &mdash; URL or local path of file (if you use S3/RackSpace mode, fill only the file name)</li>
+<li><strong>URL or path</strong> &mdash; URL or local path of file (if you use S3/RackSpace mode, fill only the directory+file name)</li>
 <li><strong>Save file as</strong> &mdash; you can enter a custom name to save file as (or leave the field blank to use file's actual name)</li>
 <li><strong>Link title</strong> &mdash; title of link to be used with fieldtype</li>
 <li><strong>Description</strong> &mdash; longer description for the link</li>
@@ -97,6 +99,10 @@
 </ul>
 
 <p class="important">If you use local folder, make sure you specify full path to file - not relative to your webserver root. It is generally recommended to place the files outside of web root.</p>
+
+	<h2><a name="cloudfront"></a>CloudFront integration</h2>
+    
+<p>Normally, Protected Links passes files though your server to make sure the original location is not exposed. However, if you are CloudFront user, you can take advantage of their signed URLs and have the authenticated visitors redirected to CloudFront signed URL, which is created for his IP and is valid for 24 hours. In the settings, fill in CloudFront Key ID and Secret Key fields. Make sure you have distributions created (with 'Restrict Viewer Access' set to 'Yes' and 'Forward Query Strings' to 'No', other settings are up to you). If you create protected link for a location that does not have distribution, the file will be served though your server just like for 's3' storage. When creating protected link, you will be entering data for the file on S3, CloudFront URL will be created automatically.</p>    
 
 	<h2><a name="fieldtype"></a>Display link using fieldtype</h2>
 
@@ -232,7 +238,7 @@
 <!-- {user_guide_comments} -->
 
 <div id="footer">
-  <address>Copyright &copy; 2011 Yuriy Salimovskiy <a href="http://www.intoeetive.com/">intoEEtive.com</a></address>
+  <address>Copyright &copy; 2011-2014 Yuri Salimovskiy <a href="http://www.intoeetive.com/">intoEEtive.com</a></address>
 </div>
 
 </body>
