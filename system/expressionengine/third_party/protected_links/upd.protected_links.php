@@ -79,7 +79,7 @@ class Protected_links_upd {
                     `file_id` INT NOT NULL ,
                     `filename` VARCHAR( 255 ) NOT NULL, 
                     `title` VARCHAR( 255 ) NULL ,
-                    `description` TEXT NOT NULL default '',
+                    `description` TEXT NULL,
                     `type` varchar(100) default 'application/force-download',
                     `guest_access` ENUM(  'y',  'n' ) NOT NULL default 'y',
                     `bind_ip` VARCHAR( 100 ) NULL ,

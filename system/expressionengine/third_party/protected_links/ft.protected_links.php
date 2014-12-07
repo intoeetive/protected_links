@@ -82,8 +82,8 @@ class Protected_links_ft extends EE_Fieldtype {
 
         if ($this->EE->session->userdata('group_id')==1 || $this->_check_access($q)==true)
         {
-            $act = $this->EE->functions->fetch_action_id('Protected_links', 'process');
-            $url = $this->EE->config->item('site_url')."?ACT=".$act."&key=".$q->row('accesskey');
+            $act_q = $this->EE->db->select('action_id')->from('actions')->where('class', 'Protected_links')->where('method', 'process')->get();
+            $url = $this->EE->config->item('site_url')."?ACT=".$act_q->row('action_id')."&key=".$q->row('accesskey');
             $out = '<a href="'.$url.'" class="protected_link">'.$q->row('title').'</a>';
             return $out;
         }
@@ -105,8 +105,8 @@ class Protected_links_ft extends EE_Fieldtype {
 
         if ($this->EE->session->userdata('group_id')==1 || $this->_check_access($q)==true)
         {
-            $act = $this->EE->functions->fetch_action_id('Protected_links', 'process');
-            $url = $this->EE->config->item('site_url')."?ACT=".$act."&key=".$q->row('accesskey');
+            $act_q = $this->EE->db->select('action_id')->from('actions')->where('class', 'Protected_links')->where('method', 'process')->get();
+            $url = $this->EE->config->item('site_url')."?ACT=".$act_q->row('action_id')."&key=".$q->row('accesskey');
             //$out = '<a href="'.$url.'" class="protected_link">'.$q->row('title').'</a>';
             return $url;
         }
