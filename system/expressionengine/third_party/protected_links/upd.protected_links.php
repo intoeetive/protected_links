@@ -47,11 +47,14 @@ class Protected_links_upd {
 			$this->EE->dbforge->add_column('modules', array('settings' => array('type' => 'TEXT') ) );
 		}
         
-        $settings = array();
-        $settings['s3_key_id'] = '';
-        $settings['s3_key_value'] = '';
-        $settings['rackspace_api_login'] = '';
-        $settings['rackspace_api_password'] = '';
+        $settings = array(
+            's3_key_id' => '',
+            's3_key_value' => '',
+            'rackspace_api_login' => '',
+            'rackspace_api_password' => '',
+            'cloudfront_key_pair_id' => '',
+            'cloudfront_private_key' => ''
+        );
         $data = array( 'module_name' => 'Protected_links' , 'module_version' => $this->version, 'has_cp_backend' => 'y', 'settings'=> serialize($settings) ); 
         $this->EE->db->insert('modules', $data); 
         
@@ -93,7 +96,7 @@ class Protected_links_upd {
                     `custom_access_rules` TEXT NULL ,
                     `use_backend` ENUM(  'y',  'n' ) NOT NULL default 'n',
                     `cp_generated` ENUM(  'y',  'n' ) NOT NULL default 'n',
-                    `dl_count` INT NOT NULL ,
+                    `dl_count` INT NOT NULL default '0',
                         PRIMARY KEY  (`link_id`),
                         UNIQUE KEY `accesskey` (`accesskey`),
                         INDEX (`file_id`)
