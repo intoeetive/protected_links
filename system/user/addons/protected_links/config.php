@@ -3,7 +3,7 @@
 if ( ! defined('PROTECTED_LINKS_ADDON_NAME'))
 {
 	define('PROTECTED_LINKS_ADDON_NAME',         'Protected Links');
-	define('PROTECTED_LINKS_ADDON_VERSION',      '2.1.2');
+	define('PROTECTED_LINKS_ADDON_VERSION',      '3.0.0');
 }
 
 $config['name']=PROTECTED_LINKS_ADDON_NAME;

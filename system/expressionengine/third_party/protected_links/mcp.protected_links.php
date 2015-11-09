@@ -157,7 +157,7 @@ class Protected_links_mcp {
 		$vars['pagination'] = $this->EE->pagination->create_links();
         
         $this->EE->cp->set_breadcrumb(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links', lang('protected_links_module_name'));
-        if ($this->EE->config->item('app_version')>=260)
+        if (version_compare(APP_VER, '2.6.0', '>='))
         {
         	$this->EE->view->cp_page_title = lang('protected_links_module_name').' - '.lang('files');
         }
@@ -183,7 +183,7 @@ class Protected_links_mcp {
 
     	$this->EE->cp->set_breadcrumb(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links', lang('protected_links_module_name'));
         
-        if ($this->EE->config->item('app_version')>=260)
+        if (version_compare(APP_VER, '2.6.0', '>='))
         {
         	$this->EE->view->cp_page_title = lang('protected_links_module_name').' - '.lang('files');
         }
@@ -332,7 +332,7 @@ class Protected_links_mcp {
         $this->EE->load->library('javascript');
         
         $this->EE->cp->set_breadcrumb(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links', lang('protected_links_module_name'));
-        if ($this->EE->config->item('app_version')>=260)
+        if (version_compare(APP_VER, '2.6.0', '>='))
         {
         	$this->EE->view->cp_page_title = lang('protected_links_module_name').' - '.lang('links');
         }
@@ -583,7 +583,7 @@ class Protected_links_mcp {
 		$vars['pagination'] = $this->EE->pagination->create_links();
         
         $this->EE->cp->set_breadcrumb(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links', lang('protected_links_module_name'));
-        if ($this->EE->config->item('app_version')>=260)
+        if (version_compare(APP_VER, '2.6.0', '>='))
         {
         	$this->EE->view->cp_page_title = lang('protected_links_module_name').' - '.lang('links');
         }
@@ -724,7 +724,7 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
         $this->EE->cp->set_breadcrumb(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links', lang('protected_links_module_name'));
         $this->EE->cp->set_breadcrumb(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=files', lang('files'));
         $url_arr = explode("/", $url->row('url'));
-        if ($this->EE->config->item('app_version')>=260)
+        if (version_compare(APP_VER, '2.6.0', '>='))
         {
         	$this->EE->view->cp_page_title = $url_arr[(count($url_arr)-1)];
         }
@@ -862,7 +862,7 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
         
         $this->EE->cp->set_breadcrumb(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links', lang('protected_links_module_name'));
         $this->EE->cp->set_breadcrumb(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=links', lang('links'));
-        if ($this->EE->config->item('app_version')>=260)
+        if (version_compare(APP_VER, '2.6.0', '>='))
         {
         	$this->EE->view->cp_page_title = $vars['selected']['title'];
         }
@@ -1019,7 +1019,7 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
         
         $this->EE->cp->set_breadcrumb(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links', lang('protected_links_module_name'));
         $this->EE->cp->set_breadcrumb(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=members', lang('members'));
-        if ($this->EE->config->item('app_version')>=260)
+        if (version_compare(APP_VER, '2.6.0', '>='))
         {
         	$this->EE->view->cp_page_title = $vars['selected']['screen_name'];
         }
@@ -1043,7 +1043,7 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
     {
     	
         $this->EE->cp->set_breadcrumb(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links', lang('protected_links_module_name'));
-        if ($this->EE->config->item('app_version')>=260)
+        if (version_compare(APP_VER, '2.6.0', '>='))
         {
         	$this->EE->view->cp_page_title = lang('protected_links_module_name').' - '.lang('members');
         }
@@ -1212,7 +1212,7 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
 		$vars['pagination'] = $this->EE->pagination->create_links();
         
         $this->EE->cp->set_breadcrumb(BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links', lang('protected_links_module_name'));
-        if ($this->EE->config->item('app_version')>=260)
+        if (version_compare(APP_VER, '2.6.0', '>='))
         {
         	$this->EE->view->cp_page_title = lang('protected_links_module_name').' - '.lang('members');
         }
@@ -1455,7 +1455,7 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
         
         if ($link_id!=0)
         {
-            if ($this->EE->config->item('app_version')>=260)
+            if (version_compare(APP_VER, '2.6.0', '>='))
             {
             	$this->EE->view->cp_page_title = lang('edit_link');
             }
@@ -1466,7 +1466,7 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
         }
         else
         {
-            if ($this->EE->config->item('app_version')>=260)
+            if (version_compare(APP_VER, '2.6.0', '>='))
             {
             	$this->EE->view->cp_page_title = lang('create_link');
             }
@@ -1501,7 +1501,7 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
             'rackspace_api_password'	=> form_input('rackspace_api_password', $this->settings['rackspace_api_password'])
     		);
     	
-        if ($this->EE->config->item('app_version')>=260)
+        if (version_compare(APP_VER, '2.6.0', '>='))
         {
         	$this->EE->view->cp_page_title = lang('protected_links_module_name').' - '.lang('settings');
         }
@@ -1821,8 +1821,7 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
     
     function _file_select($field_name)
 	{
-		$ee_version = '2.'.str_replace('.', '', substr(APP_VER, 2));
-		if ($ee_version < 2.20)
+		if (version_compare(APP_VER, '2.2.0', '<'))
 		{
 			return;
 		}
@@ -1870,7 +1869,7 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
 	        
         $this->EE->load->model('file_upload_preferences_model');
 		
-		if ($ee_version < 2.40)
+		if (version_compare(APP_VER, '2.4.0', '<'))
 		{
 			$upload_directories = $this->EE->file_upload_preferences_model->get_upload_preferences($this->EE->session->userdata('group_id'), '');
 		}
@@ -1890,7 +1889,7 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
         
         $this->EE->load->library('filemanager');
 		
-		if ($ee_version < 2.40)
+		if (version_compare(APP_VER, '2.4.0', '<'))
 		{
 	        $this->EE->filemanager->filebrowser('C=content_publish&M=filemanager_actions');   
 		}
@@ -1980,7 +1979,7 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
     
     function _string_to_timestamp($human_string, $localized = TRUE)
     {
-        if ($this->EE->config->item('app_version')<260)
+        if (version_compare(APP_VER, '2.6.0', '<'))
         {
             return $this->EE->localize->convert_human_date_to_gmt($human_string, $localized);
         }
@@ -1992,7 +1991,7 @@ date_obj_time = \"' \"+date_obj_hours+\":\"+date_obj_mins+\" \"+date_obj_am_pm+\
     
     function _format_date($one=false, $two=false, $three=true)
     {
-    	if ($this->EE->config->item('app_version')>=260)
+    	if (version_compare(APP_VER, '2.6.0', '>='))
     	{
 			return $this->EE->localize->format_date($one, $two, $three);
 		}
