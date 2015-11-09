@@ -435,11 +435,11 @@ class Protected_links_mcp {
         
         if ($filter_values['link_id']!='')
         {
-            ee()->db->where('link_id', $filter_values['link_id']);
+            ee()->db->where('exp_protected_links_stats.link_id', $filter_values['link_id']);
         }
         if ($filter_values['file_id']!='')
         {
-            ee()->db->where('file_id', $filter_values['file_id']);
+            ee()->db->where('exp_protected_links_stats.file_id', $filter_values['file_id']);
         }
         if ($filter_values['member_id']!='')
         {
@@ -453,7 +453,7 @@ class Protected_links_mcp {
         }
         if ($filter_values['date']!='')
         {
-            ee()->db->where('dl_date > ', $filter_values['date']);
+            ee()->db->where('exp_protected_links_stats.dl_date > ', $filter_values['date']);
         }
         $total = ee()->db->count_all_results('protected_links_stats');
         
@@ -465,11 +465,11 @@ class Protected_links_mcp {
         ee()->db->join('members', 'protected_links_stats.member_id=members.member_id', 'left');
         if ($filter_values['link_id']!='')
         {
-            ee()->db->where('link_id', $filter_values['link_id']);
+            ee()->db->where('exp_protected_links_stats.link_id', $filter_values['link_id']);
         }
         if ($filter_values['file_id']!='')
         {
-            ee()->db->where('file_id', $filter_values['file_id']);
+            ee()->db->where('exp_protected_links_stats.file_id', $filter_values['file_id']);
         }
         if ($filter_values['member_id']!='')
         {
@@ -483,7 +483,7 @@ class Protected_links_mcp {
         }
         if ($filter_values['date']!='')
         {
-            ee()->db->where('dl_date > ', $filter_values['date']);
+            ee()->db->where('exp_protected_links_stats.dl_date > ', $filter_values['date']);
         }
         ee()->db->limit($filter_values['perpage'], $offset);
         
