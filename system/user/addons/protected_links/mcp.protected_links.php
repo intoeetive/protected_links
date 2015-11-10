@@ -420,19 +420,9 @@ class Protected_links_mcp {
         $filters->add($fileFilter);
         $filters->add('Date')->withName('date');
         $filters->add('Username')->withName('member_id');
-        $filters->add('Perpage', 10);
         
         $filter_values = $filters->values();
-        
-        $vars['filters'] = $filters->render($base_url);
-        
-        $base_url->addQueryStringVariables($filter_values);     
-        
-        $page = ((int) ee()->input->get('page')) ?: 1;
-		$offset = ($page - 1) * $filter_values['perpage']; 
-        
-        $act = ee()->db->select("action_id")->from("actions")->where('class', 'Protected_links')->where('method', 'process')->get();
-        
+
         if ($filter_values['link_id']!='')
         {
             ee()->db->where('exp_protected_links_stats.link_id', $filter_values['link_id']);
@@ -457,6 +447,18 @@ class Protected_links_mcp {
         }
         $total = ee()->db->count_all_results('protected_links_stats');
         
+        $filters->add('Perpage', $total);
+        
+        $filter_values = $filters->values();
+        
+        $vars['filters'] = $filters->render($base_url);
+        
+        $base_url->addQueryStringVariables($filter_values);     
+        
+        $page = ((int) ee()->input->get('page')) ?: 1;
+		$offset = ($page - 1) * $filter_values['perpage']; 
+        
+        $act = ee()->db->select("action_id")->from("actions")->where('class', 'Protected_links')->where('method', 'process')->get();
         
         
         ee()->db->select('protected_links_links.title, protected_links_links.accesskey, protected_links_stats.*, members.screen_name');
@@ -690,51 +692,7 @@ class Protected_links_mcp {
 	
     }    
     
-    
-    
-    function _members($state)
-    {
-        $rows = array();
-        
-        $offset = $state['offset'];
-        
-        ee()->db->select('exp_protected_links_stats.member_id, screen_name, COUNT(dl_id) AS dl_count');
-        ee()->db->from('protected_links_stats');
-        ee()->db->join('members', 'exp_protected_links_stats.member_id=exp_members.member_id', 'left');
-        if (ee()->input->get_post('search')!==false && strlen(ee()->input->get_post('search'))>2)
-        {
-            ee()->db->where('username LIKE "%'.ee()->db->escape_str(ee()->input->get_post('search')).'%" OR screen_name LIKE "%'.ee()->db->escape_str(ee()->input->get_post('search')).'%" OR email LIKE "%'.ee()->db->escape_str(ee()->input->get_post('search')).'%" ');
-        }
-        ee()->db->order_by('screen_name', 'asc');
-        ee()->db->group_by('exp_protected_links_stats.member_id');
 
-        $query = ee()->db->get();
-        
-        $i = $offset+1;
- 
-        foreach ($query->result() as $obj)
-        {
-           $rows[$i]['screen_name'] = ($obj->member_id!=0)?"<a href=\"".BASE.AMP.'D=cp'.AMP.'C=myaccount'.AMP.'id='.$obj->member_id."\">".$obj->screen_name."</a>":ee()->lang->line('guest');
-           $rows[$i]['dl_count'] = $obj->dl_count;
-           $rows[$i]['view_stats'] = "<a href=\"".BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module=protected_links'.AMP.'method=memberstats'.AMP.'member_id='.$obj->member_id."\" title=\"".ee()->lang->line('view_stats')."\"><img src=\"".ee()->config->slash_item('theme_folder_url')."third_party/protected_links/stats.png\" alt=\"".ee()->lang->line('view_stats')."\"></a>";
-           
-           $i++;
-        }
-        
-        $this->sort = $state['sort'];
-        usort($rows, array($this, '_sort_rows'));
-
-    
-        return array(
-            'rows' => array_slice($rows, $offset, $this->perpage),
-            'pagination' => array(
-                'per_page'   => $this->perpage,
-                'total_rows' => count($rows),
-            ),
-        );
-    }
-
-    
     
     function edit()
     {
