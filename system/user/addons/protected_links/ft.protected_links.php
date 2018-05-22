@@ -300,7 +300,7 @@ class Protected_links_ft extends EE_Fieldtype {
 	 * Grid support
 	 */
      
-     public function accepts_content_type($name)
+    public function accepts_content_type($name)
     {
         return ($name == 'channel' || $name == 'grid');
     }

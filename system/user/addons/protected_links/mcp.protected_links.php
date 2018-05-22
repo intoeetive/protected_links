@@ -385,6 +385,9 @@ class Protected_links_mcp {
     {
         $vars = array();
         
+        $sort_col = ee()->input->get_post('sort_col') ? ee()->input->get_post('sort_col') : 'link_id';
+        $sort_dir = ee()->input->get_post('sort_dir') ? ee()->input->get_post('sort_dir') : 'desc';
+        
         $base_url = ee('CP/URL')->make("addons/settings/protected_links/stats");
         
         $links_q = ee()->db->select('link_id, title')
@@ -487,6 +490,7 @@ class Protected_links_mcp {
         {
             ee()->db->where('exp_protected_links_stats.dl_date > ', $filter_values['date']);
         }
+        ee()->db->order_by($sort_col, $sort_dir);
         ee()->db->limit($filter_values['perpage'], $offset);
         
         $table = ee('CP/Table');
@@ -949,13 +953,10 @@ class Protected_links_mcp {
             ->filter('group_id', 'NOT IN', array(1,2,3))
             ->all();
         $group_access = array();
+        $choices = [];
         foreach ($MemberGroupsColl as $coll)
         {
-            $group_access["group_access[$coll->group_id]"] = array(
-                  'type' => 'checkbox',
-                  'choices' => array($coll->group_id => $coll->group_title),
-                  'value' => $data['group_access']
-                );
+            $group_access[$coll->group_id] = $coll->group_title;
         }
         
         $MemberFieldsColl = ee('Model')
@@ -1156,7 +1157,13 @@ class Protected_links_mcp {
             ),                                          
             array(
               'title' => 'group_access',
-              'fields' => $group_access
+              'fields' => array(
+                'group_access'  => array(
+                  'type' => 'checkbox',
+                  'choices' => $group_access,
+                  'value' => $data['group_access']
+                )
+              )
             ),
             array(
               'title' => 'expires',
@@ -1245,6 +1252,14 @@ class Protected_links_mcp {
                     $('input[name=type]').parent().parent().hide();
 				}
 			});
+            
+            
+            $('.filepicker').FilePicker({
+              callback: function(data, references) {
+                references.modal.find('.m-close').click();
+                $(references.input_value.selector).val(data.path);                                
+              }
+            });                                    
 		");
         
 

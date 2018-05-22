@@ -176,6 +176,11 @@ This add-on lets you encrypt/secure download links, restrict access to the files
 
 ## Changelog
 
+### 3.0.1
+
+- Fixed setting group access
+- Fixed filepicker
+
 ### 3.0.0
 
 - Rewrite for ExpressionEngine 3.0

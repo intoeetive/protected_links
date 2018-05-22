@@ -824,6 +824,10 @@ class Protected_links {
                 ee()->db->where('guest_access', 'y');
             }
         }
+        else
+        {
+            ee()->db->where('guest_access', 'y');
+        }
         
         $q = ee()->db->get();
         
