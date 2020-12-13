@@ -106,7 +106,13 @@ class Protected_links {
         {
             $allowed_groups = explode("|", $link_q->row('group_access'));
             $allowed_groups = array_filter($allowed_groups, 'strlen');
-            if (!empty($allowed_groups) && !in_array(ee()->session->userdata('group_id'), $allowed_groups))
+            if (version_compare(APP_VER, '6.0', '>=')) {
+                $member = ee()->session->getMember();
+                $role_ids = $member ? $member->getAllRoles()->pluck('role_id') : [];
+            } else {
+                $role_ids = [ee()->session->userdata('group_id')];
+            }
+            if (!empty($allowed_groups) && !array_intersect($role_ids, $allowed_groups))
             {
                 return ee()->output->show_user_error('general', array(ee()->lang->line('group_no_access')));
             }
@@ -470,7 +476,13 @@ class Protected_links {
         //group access check
         $allowed_groups = explode("|", $q->row('group_access'));
         $allowed_groups = array_filter($allowed_groups, 'strlen');
-        if (!empty($allowed_groups) && !in_array(ee()->session->userdata('group_id'), $allowed_groups))
+        if (version_compare(APP_VER, '6.0', '>=')) {
+            $member = ee()->session->getMember();
+            $role_ids = $member ? $member->getAllRoles()->pluck('role_id') : [];
+        } else {
+            $role_ids = [ee()->session->userdata('group_id')];
+        }
+        if (!empty($allowed_groups) && !array_intersect($role_ids, $allowed_groups))
         {
             return ee()->TMPL->no_results();
         }
@@ -568,7 +580,7 @@ class Protected_links {
             }
             
             //expired?
-            if ($obj->expires!='' && ee()->localize->now > $obj->expires)
+            if ($obj->expires!='' && $obj->expires!=0 && ee()->localize->now > $obj->expires)
             {
                 continue;
             }
@@ -584,7 +596,13 @@ class Protected_links {
             //group access check
             $allowed_groups = explode("|", $obj->group_access);
             $allowed_groups = array_filter($allowed_groups, 'strlen');
-            if (!empty($allowed_groups) && !in_array(ee()->session->userdata('group_id'), $allowed_groups))
+            if (version_compare(APP_VER, '6.0', '>=')) {
+                $member = ee()->session->getMember();
+                $role_ids = $member ? $member->getAllRoles()->pluck('role_id') : [];
+            } else {
+                $role_ids = [ee()->session->userdata('group_id')];
+            }
+            if (!empty($allowed_groups) && !array_intersect($role_ids, $allowed_groups))
             {
                 continue;
             }

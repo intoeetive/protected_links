@@ -187,10 +187,14 @@ This add-on lets you encrypt/secure download links, restrict access to the files
 - CP interface improvements
 - Grid support
 
+### 3.1.0
+
+- ExpressionEngine 6 support
+
 ## License
 
 The purchase of the add-on grants you to use it on single production installation of ExpressionEngine. Should you be willing to use it on several production websites, you should purchase additional licenses. The full license agreement is available [here](http://www.intoeetive.com/docs/license.html)
 
 ## Support
 
-Should you have any questions, please email [support@intoeetive.com](mailto:support@intoeetive.com) (for official support) or ask questions on [EE StackOverflow](http://expressionengine.stackexchange.com/) (for community support)
+Should you have any questions, please email [yuri.salimovskiy@gmail.com](mailto:yuri.salimovskiy@gmail.com) (for official support) or ask questions on [EE StackOverflow](http://expressionengine.stackexchange.com/) (for community support)

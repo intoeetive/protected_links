@@ -947,16 +947,30 @@ class Protected_links_mcp {
       		ee()->javascript->output('$("select[name=endpoint]").parent().parent().hide();');
         }
         
-        $MemberGroupsColl = ee('Model')
-            ->get('MemberGroup')
-            ->fields('group_id', 'group_title')
-            ->filter('group_id', 'NOT IN', array(1,2,3))
-            ->all();
-        $group_access = array();
-        $choices = [];
-        foreach ($MemberGroupsColl as $coll)
-        {
-            $group_access[$coll->group_id] = $coll->group_title;
+        if (version_compare(APP_VER, '6.0', '>=')) {
+          $RolesColl = ee('Model')
+              ->get('Role')
+              ->fields('role_id', 'name')
+              ->filter('role_id', 'NOT IN', array(1,2,3))
+              ->all();
+          $group_access = array();
+          $choices = [];
+          foreach ($RolesColl as $coll)
+          {
+              $group_access[$coll->role_id] = $coll->name;
+          }
+        } else {
+          $MemberGroupsColl = ee('Model')
+              ->get('MemberGroup')
+              ->fields('group_id', 'group_title')
+              ->filter('group_id', 'NOT IN', array(1,2,3))
+              ->all();
+          $group_access = array();
+          $choices = [];
+          foreach ($MemberGroupsColl as $coll)
+          {
+              $group_access[$coll->group_id] = $coll->group_title;
+          }
         }
         
         $MemberFieldsColl = ee('Model')
