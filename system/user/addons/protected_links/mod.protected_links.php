@@ -84,7 +84,7 @@ class Protected_links {
         }
         
         //expired?
-        if ($link_q->row('expires')!='' && ee()->localize->now > $link_q->row('expires'))
+        if ($link_q->row('expires')!='' && $link_q->row('expires')!=0 && ee()->localize->now > $link_q->row('expires'))
         {
             return ee()->output->show_user_error('general', array(ee()->lang->line('link_expired')));
         }
@@ -460,7 +460,7 @@ class Protected_links {
         }
         
         //expired?
-        if ($q->row('expires')!='' && ee()->localize->now > $q->row('expires'))
+        if ($q->row('expires')!='' && $q->row('expires')!=0 && ee()->localize->now > $q->row('expires'))
         {
             return ee()->TMPL->no_results();
         }
